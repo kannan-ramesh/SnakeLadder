@@ -1,5 +1,7 @@
 package com.kannanrameskrk;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class SnakeLadder {
@@ -59,11 +61,48 @@ public class SnakeLadder {
 			System.out.println("Enter player" + (i + 1) + " Name: ");
 			players[i] = input.next();
 		}
+		int square = arr.length * arr[0].length;
 
+		int minMoves = findMinMoves(arr, snake, ladder, square);
+
+		System.out.println("The least number of moves required to reach square " + square + " is: " + minMoves);
+		
 		playGame(arr, snake, ladder, players, playerPositions);
-		displayBoard(snake);
-		System.out.println();
-		displayBoard(ladder);
+		
+	}
+
+	private int findMinMoves(int[][] arr, int[][] snake, int[][] ladder, int destinationSquare) {
+		Queue<Integer> queue = new LinkedList<>();
+		boolean[] visited = new boolean[destinationSquare+1];
+
+		queue.add(1);
+		visited[1] = true;
+
+		int moves = 0;
+
+		while (!queue.isEmpty()) {
+			int size = queue.size();
+
+			for (int i = 0; i < size; i++) {
+				int currentVal = queue.poll();
+
+				if (currentVal == destinationSquare) {
+					return moves;
+				}
+
+				for (int j = 1; j <= 6; j++) {
+					int nextSquare = currentVal + j;
+					nextSquare = checkSnakeLaddor(snake, ladder, nextSquare);
+
+					if (nextSquare <= (arr.length * arr[0].length) && !visited[nextSquare]) {
+						queue.add(nextSquare);
+						visited[nextSquare] = true;
+					}
+				}
+			}
+			moves++;
+		}
+		return moves;
 	}
 
 	private void playGame(int[][] arr, int[][] snake, int[][] ladder, String[] players, int[] playerPositions) {
@@ -80,14 +119,13 @@ public class SnakeLadder {
 				}
 
 				int newPos = checkSnakeLaddor(snake, ladder, playerPositions[i]);
-				if(playerPositions[i]==newPos) {
+				if (playerPositions[i] == newPos) {
 					System.out.println(
 							players[i] + " moved from " + (playerPositions[i] - rotate) + " to " + playerPositions[i]);
 					System.out.println();
-				}else {
+				} else {
 					playerPositions[i] = newPos;
-					System.out.println(
-							players[i] + " moved from " + newPos + " to " + playerPositions[i]);
+					System.out.println(players[i] + " moved from " + newPos + " to " + playerPositions[i]);
 					System.out.println();
 				}
 			}
