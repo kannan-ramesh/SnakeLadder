@@ -1,11 +1,14 @@
 package com.kannanrameskrk;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
 
 public class SnakeLadder {
 	Scanner input = new Scanner(System.in);
+	List<Integer> path = new ArrayList<>();
 
 	public void start() {
 		System.out.println("\t\tSnake Ladder");
@@ -61,19 +64,47 @@ public class SnakeLadder {
 			System.out.println("Enter player" + (i + 1) + " Name: ");
 			players[i] = input.next();
 		}
-		int square = arr.length * arr[0].length;
 
-		int minMoves = findMinMoves(arr, snake, ladder, square);
+		System.out.println("1. Play Game");
+		System.out.println("2. Find minimum path move:");
+		System.out.println("3. If a player is in 95 what is the probality to win the game?:");
+		System.out.println("4. exit..");
+		System.out.println("ENter option:");
+		int choice = input.nextInt();
+		boolean loop = true;
 
-		System.out.println("The least number of moves required to reach square " + square + " is: " + minMoves);
-		
-		playGame(arr, snake, ladder, players, playerPositions);
-		
+		while (loop) {
+			switch (choice) {
+			case 1: {
+				playGame(arr, snake, ladder, players, playerPositions);
+				break;
+			}
+			case 2: {
+				int square = arr.length * arr[0].length;
+				System.out.println(square);
+				int minMoves = findMinMoves(arr, snake, ladder, 100);
+
+				System.out.println("The least number of moves required to reach square " + square + " is: " + minMoves);
+				System.out.println(path);
+				break;
+			}
+			case 3: {
+				loop = false;
+				System.exit(0);
+				break;
+			}
+			default: {
+				System.out.println("invalid choice:");
+				break;
+			}
+			}
+		}
+
 	}
 
 	private int findMinMoves(int[][] arr, int[][] snake, int[][] ladder, int destinationSquare) {
 		Queue<Integer> queue = new LinkedList<>();
-		boolean[] visited = new boolean[destinationSquare+1];
+		boolean[] visited = new boolean[destinationSquare + 1];
 
 		queue.add(1);
 		visited[1] = true;
@@ -85,49 +116,84 @@ public class SnakeLadder {
 
 			for (int i = 0; i < size; i++) {
 				int currentVal = queue.poll();
-
 				if (currentVal == destinationSquare) {
 					return moves;
 				}
 
 				for (int j = 1; j <= 6; j++) {
 					int nextSquare = currentVal + j;
-					nextSquare = checkSnakeLaddor(snake, ladder, nextSquare);
 
-					if (nextSquare <= (arr.length * arr[0].length) && !visited[nextSquare]) {
+					for (int k = 0; k < snake.length; k++) {
+						if (snake[k][0] == nextSquare) {
+							nextSquare = snake[k][1];
+							break;
+						}
+					}
+					for (int k = 0; k < ladder.length; k++) {
+						if (ladder[k][0] == nextSquare) {
+							nextSquare = ladder[k][1];
+							break;
+						}
+					}
+
+					if (nextSquare <= destinationSquare && !visited[nextSquare]) {
 						queue.add(nextSquare);
 						visited[nextSquare] = true;
 					}
 				}
 			}
 			moves++;
+			path.add(queue.element());
 		}
-		return moves;
+		System.out.println(path);
+		return -1;
 	}
 
 	private void playGame(int[][] arr, int[][] snake, int[][] ladder, String[] players, int[] playerPositions) {
 		while (true) {
-
 			for (int i = 0; i < players.length; i++) {
-				int rotate = (int) ((Math.random() * 6) + 1);
-				System.out.println("players " + players[i] + " Rotate role:");
-				playerPositions[i] += rotate;
+				int consecutiveSixes = 0;
+				int totalMoves = 0;
 
-				if (playerPositions[i] >= arr.length * arr[0].length) {
-					System.out.println(players[i] + "  Won the game...");
-					return;
-				}
+				while (true) {
+					int rotate = (int) ((Math.random() * 6) + 1);
 
-				int newPos = checkSnakeLaddor(snake, ladder, playerPositions[i]);
-				if (playerPositions[i] == newPos) {
-					System.out.println(
-							players[i] + " moved from " + (playerPositions[i] - rotate) + " to " + playerPositions[i]);
-					System.out.println();
-				} else {
-					playerPositions[i] = newPos;
-					System.out.println(players[i] + " moved from " + newPos + " to " + playerPositions[i]);
-					System.out.println();
+					if (rotate == 6) {
+						consecutiveSixes++;
+
+						if (consecutiveSixes == 3) {
+							System.out.println("Three consecutive 6s! " + players[i] + " loses their turn.");
+							break;
+						}
+					} else {
+						consecutiveSixes = 0;
+					}
+
+					System.out.println("Player " + players[i] + " rolled: " + rotate);
+
+					playerPositions[i] += rotate;
+
+					if (playerPositions[i] >= arr.length * arr[0].length) {
+						System.out.println(players[i] + " won the game!");
+						return;
+					}
+
+					int newPos = checkSnakeLaddor(snake, ladder, playerPositions[i]);
+					if (playerPositions[i] == newPos) {
+						System.out.println(players[i] + " moved from " + (playerPositions[i] - rotate) + " to "
+								+ playerPositions[i]);
+					} else {
+						playerPositions[i] = newPos;
+					}
+
+					totalMoves++;
+
+					if (rotate != 6 || consecutiveSixes == 3) {
+						break;
+					}
 				}
+				System.out.println("Total moves for " + players[i] + ": " + totalMoves);
+				System.out.println();
 			}
 		}
 	}
